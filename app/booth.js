@@ -27,7 +27,7 @@ import 'popper.js';
 import 'bootstrap';
 
 import utils from "./utils.js";
-import camera from "./camera.js";
+import camera from "./camera/index.js";
 import LivePreview from "./live-preview.js";
 import {
   SpinnerPrompt,

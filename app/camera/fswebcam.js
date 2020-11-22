@@ -21,11 +21,10 @@
 import fs from 'fs';
 import sharp from 'sharp';
 
-import utils from "./utils.js";
+import utils from "../utils.js";
 
-const gphoto2 = utils.getConfig().gphoto2.simulate
-	? null
-	: require('gphoto2');
+const config = utils.getConfig().fswebcam;
+const simulate = config ? config.simulate : false;
 
 class Camera {
 
@@ -36,86 +35,27 @@ class Camera {
 	* Detect and configure camera
 	*/
 	initialize(callback) {
-		if (gphoto2 === null) {
-			callback(true);
-			return;
-		}
-
-		this.GPhoto = new gphoto2.GPhoto2();
-
-		// Negative value or undefined will disable logging, levels 0-4 enable it.
-		this.GPhoto.setLogLevel(-1);
-
-		var self = this;
-		this.GPhoto.list(function (list) {
-			if (list.length === 0) {
-				callback(false, 'No camera found', null);
-				return;
-			}
-			self.camera = list[0];
-
-			console.log('gphoto2: Found', self.camera.model);
-
-			if (utils.getConfig().gphoto2.capturetarget) {
-				self.camera.setConfigValue('capturetarget', utils.getConfig().gphoto2.capturetarget, function (err) {
-					if (err){
-						callback(false, 'setting config failed', err);
-					} else {
-						callback(true);
-					}
-				});
-			}
-		});
+		
 	}
 
 	isInitialized(){
-		return (this.camera !== undefined) || gphoto2 === null;
+		return true;
 	}
 
 	isConnected(callback) {
-		if (gphoto2 === null) {
-			callback(true);
-			return;
-		}
-
-		this.camera.getConfig(function (err, settings) {
-			if (err) {
-				if (callback) callback(false, 'connection test failed', err);
-			} else {
-				self.camera == undefined;	// needs to be reinitialized
-				if (callback) callback(true);
-			}
-		});
+		if (callback) callback(true);
 	}
 
 	takePicture(callback) {
-		if (gphoto2 !== null) {
-			this._takePictureWithCamera(callback);
-		} else {
+		if (simulate) {
 			this._createSamplePicture(callback);
+		} else {
+			this._takePictureWithCamera(callback);
 		}
 	}
 
 	_takePictureWithCamera(callback) {
-		var self = this;
-
-		if (self.camera === undefined) {
-			callback(-1, 'camera not initialized', null);
-			return;
-		}
-
-		const keep = utils.getConfig().gphoto2.keep === true ?  true : false;
-
-		self.camera.takePicture({ download: true, keep: keep }, function (err, data) {
-
-			if (err) {
-				self.camera = undefined;	// needs to be reinitialized
-				callback(-2, 'connection to camera failed', err);
-				return;
-			}
-
-			self._resizeAndSave(data, callback);
-		});
+		callback(-3, 'not implemented', null);
 	}
 
 	_createSamplePicture(callback) {

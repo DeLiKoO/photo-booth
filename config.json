@@ -1,12 +1,12 @@
 {
 	"language": "en",
 	"init": {
-		"fullscreen": true,
-		"width": 1440,
-		"height": 900,
-		"showDevTools": false,
+		"fullscreen": false,
+		"width": 1920,
+		"height": 1080,
+		"showDevTools": true,
 		"useGPIO": false,
-		"grayscaleMode": true,
+		"grayscaleMode": false,
 		"preventScreensaver": true
 	},
 	"maxImageSize": "1500",
@@ -19,9 +19,13 @@
 		"activatesAfterSeconds": "30",
 		"secondsPerPhoto": "8"
 	},
+	"cameraInterface": "fswebcam",
+	"fswebcam": {
+		"simulate": true
+	},
 	"gphoto2": {
-		"capturetarget": 1,
-		"keep": true,
+		"capturetarget": 0,
+		"keep": false,
 		"simulate": false
 	},
 	"triggers": {
@@ -50,6 +54,6 @@
 		"position": "bottomleft"
 	},
 	"flash": {
-		"enabled": true
+		"enabled": false
 	}
 }
