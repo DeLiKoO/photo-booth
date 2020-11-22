@@ -21,7 +21,7 @@
 	},
 	"cameraInterface": "fswebcam",
 	"fswebcam": {
-		"simulate": true
+		"simulate": false
 	},
 	"gphoto2": {
 		"capturetarget": 0,

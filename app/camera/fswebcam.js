@@ -20,11 +20,15 @@
 
 import fs from 'fs';
 import sharp from 'sharp';
+import webcam from 'node-webcam';
+
 
 import utils from "../utils.js";
 
 const config = utils.getConfig().fswebcam;
 const simulate = config ? config.simulate : false;
+
+
 
 class Camera {
 
@@ -35,15 +39,36 @@ class Camera {
 	* Detect and configure camera
 	*/
 	initialize(callback) {
-		
+		const keep = utils.getConfig().fswebcam.keep === true ?  true : false;
+		this.opts = {
+			// defaults to 1080p, should be configurable
+			width: 1920,
+			height: 1080,
+			// kepp in camera memory
+			saveShots: keep,
+			// as of now, we will only support jpeg, all alike the original gphoto2 implementation
+			output: "jpeg",
+			// default device, use webcam.list() to get a list of cameras
+			device: false,
+			// retrieve image buffer, all alike the original gphoto2 implementation
+			callbackReturn: "buffer",
+			verbose: true, // enable logging, for now
+		};
+		try {
+			this.camera = webcam.create(this.opts);
+			if (callback) callback(true);
+		} catch (err) {
+			console.log(err);
+			if (callback) callback(false, 'connection to webcam failed', err);
+		}
 	}
 
-	isInitialized(){
-		return true;
+	isInitialized() {
+		return (this.camera !== undefined);
 	}
 
 	isConnected(callback) {
-		if (callback) callback(true);
+		if (callback) callback(this.camera !== undefined);
 	}
 
 	takePicture(callback) {
@@ -55,7 +80,25 @@ class Camera {
 	}
 
 	_takePictureWithCamera(callback) {
-		callback(-3, 'not implemented', null);
+		var self = this;
+
+		if (self.camera === undefined) {
+			callback(-1, 'camera not initialized', null);
+			return;
+		}
+
+		const keep = utils.getConfig().fswebcam.keep === true ?  true : false;
+
+		self.camera.capture("photobooth_capture", function (err, data) {
+
+			if (err) {
+				self.camera = undefined;	// needs to be reinitialized
+				callback(-2, 'connection to camera failed', err);
+				return;
+			}
+
+			self._resizeAndSave(data, callback);
+		});
 	}
 
 	_createSamplePicture(callback) {
