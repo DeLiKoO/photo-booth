@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs';
 import { createHash } from 'crypto';
-import { exec } from 'child_process';
+import { fork } from 'child_process';
 
 import sharp from 'sharp';
 
@@ -102,8 +102,6 @@ class Collage {
             overlay: this.printing.overlay
         })).toString('base64');
         const params = [
-            'node',
-            './collage-process.js',
             filePath,
             layoutAsBase64,
             optionsAsBase64
@@ -111,14 +109,15 @@ class Collage {
 
         params.push(...images);
 
-        const childProcess = exec(params.join(' '), {
-            cwd: './helpers/collage'
-        }, function(error, stdout, stderr) {
-            if (error) {
-                callback(error);
-            } else {
-                callback(false);
-            }
+        const childProcess = fork('./collage-process.js', params, {
+            cwd: '.',
+            stdio: 'pipe'
+        });
+        childProcess.on('error', (err) => {
+            callback(err);
+        });
+        childProcess.on('exit', (err) => {
+            callback(err); // 0 is success
         });
     }
 

@@ -17,7 +17,7 @@
 	"slideshow": {
 		"enabled": true,
 		"activatesAfterSeconds": "30",
-		"secondsPerPhoto": "8"
+		"secondsPerPhoto": "3"
 	},
 	"cameraInterface": "fswebcam",
 	"fswebcam": {
@@ -41,12 +41,31 @@
 		"contactAddressType": "email"
 	},
 	"printing": {
-		"enabled": false,
+		"enabled": true,
 		"simulate": false,
-		"printer": "printer-name",
+		"printer": "Canon_TS8200_series",
 		"limitPerUser": 0,
 		"grayscale": false,
-		"layouts": []
+		"layouts": [
+			{
+				"key": "3x1",
+				"options": {
+					"dpi": 300,
+					"width": 1,
+					"height": 3,
+					"imageWidth": 868,
+					"imageHeight": 577,
+					"backgroundColor": "#ffffff",
+					"spacing": {
+						"top": 8,
+						"left": 0,
+						"bottom": 8,
+						"right": 1,
+						"betweenImages": 11
+					}
+				}
+			}
+		]
 	},
 	"branding": {
 		"type": "text",

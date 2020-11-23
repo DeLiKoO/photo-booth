@@ -41,7 +41,7 @@
   ],
   "preferGlobal": true,
   "devDependencies": {
-    "electron": "1.7.9",
+    "electron": "^1.7.9",
     "electron-compilers": "^5.9.0"
   },
   "dependencies": {
@@ -61,7 +61,8 @@
     "node-webcam": "^0.6.4",
     "popper.js": "^1.14.1",
     "sharp": "^0.22.1",
-    "socket.io": "^1.7.0"
+    "socket.io": "^1.7.0",
+    "canvas": "^2.6.0"
   },
   "optionalDependencies": {
     "gphoto2": "^0.3.0",
