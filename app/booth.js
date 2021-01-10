@@ -52,7 +52,7 @@ camera.initialize(function( res, msg, err) {
   }
   let liveConfig = utils.getConfig().live;
   if(liveConfig){
-    livePreview = new LivePreview(camera.camera, document.getElementById('live'), liveConfig.framerate);
+    livePreview = new LivePreview(camera, document.getElementById('live'), liveConfig.framerate);
     livePreview.start()
   }
 });

@@ -44,7 +44,7 @@ class Camera {
 			// defaults to 1080p, should be configurable
 			width: 1920,
 			height: 1080,
-			// kepp in camera memory
+			// keep in camera memory
 			saveShots: keep,
 			// as of now, we will only support jpeg, all alike the original gphoto2 implementation
 			output: "jpeg",
@@ -54,12 +54,17 @@ class Camera {
 			callbackReturn: "buffer",
 			verbose: true, // enable logging, for now
 		};
-		try {
-			this.camera = webcam.create(this.opts);
+		if(this.camera) {
+			console.log("camera already initialized");
 			if (callback) callback(true);
-		} catch (err) {
-			console.log(err);
-			if (callback) callback(false, 'connection to webcam failed', err);
+		} else {
+			try {
+				this.camera = webcam.create(this.opts);
+				if (callback) callback(true);
+			} catch (err) {
+				console.log(err);
+				if (callback) callback(false, 'connection to webcam failed', err);
+			}
 		}
 	}
 
@@ -71,15 +76,21 @@ class Camera {
 		if (callback) callback(this.camera !== undefined);
 	}
 
-	takePicture(callback) {
-		if (simulate) {
-			this._createSamplePicture(callback);
+	takePicture(callback, preview = false) {
+		let filename;
+		if(preview) {
+			filename = "img_" + utils.getTimestamp() + ".jpg";
 		} else {
-			this._takePictureWithCamera(callback);
+			filename = "preview.jpg";
+		}
+		if (simulate) {
+			this._createSamplePicture(filename, callback);
+		} else {
+			this._takePictureWithCamera(filename, callback);
 		}
 	}
 
-	_takePictureWithCamera(callback) {
+	_takePictureWithCamera(filename, callback) {
 		var self = this;
 
 		if (self.camera === undefined) {
@@ -96,12 +107,12 @@ class Camera {
 				callback(-2, 'connection to camera failed', err);
 				return;
 			}
-
-			self._resizeAndSave(data, callback);
+		
+			self._resizeAndSave(data, filename, callback);
 		});
 	}
 
-	_createSamplePicture(callback) {
+	_createSamplePicture(filename, callback) {
 		var self = this;
 
 		console.log('sample picture');
@@ -118,21 +129,20 @@ class Camera {
 			if (err) {
 				callback(-2, 'failed to create sample picture', err);
 			} else {
-				self._resizeAndSave(data, callback);
+				self._resizeAndSave(data, filename, callback);
 			}
 		});
 	}
 
-	_resizeAndSave(data, callback) {
-		const filename = "img_" + utils.getTimestamp() + ".jpg";
+	_resizeAndSave(data, filename, callback) {
 
 		function resizeInternal() {
 			const resizedFilePath = utils.getPhotosDirectory() + filename;
-			const webFilepath = 'photos/' + "img_" + utils.getTimestamp() + ".jpg";
-			const maxImageSize = utils.getConfig().maxImageSize ? utils.getConfig().maxImageSize : 1500;
+			const webFilepath = 'photos/' + filename;
+			// const maxImageSize = utils.getConfig().maxImageSize ? utils.getConfig().maxImageSize : 1500;
 
 			sharp(data) // resize image to given maxSize
-				.resize(Number(maxImageSize)) // scale width to 1500
+				//.resize(Number(maxImageSize)) // scale width to 1500
 				.toFile(resizedFilePath, function(err) {
 					if (err) {
 						callback(-3, 'resizing image failed', err);

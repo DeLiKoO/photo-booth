@@ -30,12 +30,12 @@ class LivePreview{
 		}
 	}
 	takePreview(){
-		return new Promise((res,rej)=>this.cam.takePicture ({ keep: true, preview: true, targetPath: "/tmp/liveimg.XXXXXX" }, function (error, data) {
+		return new Promise((res,rej)=>this.cam.takePicture (function (error, data) {
 			if(error)
 				rej(error); 
 			else
 				res(data);
-		}));
+		}, true));
 	}
 	async refreshPreview(){
 		try{

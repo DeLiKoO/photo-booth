@@ -88,9 +88,13 @@ class Camera {
 		});
 	}
 
-	takePicture(callback) {
+	takePicture(callback, preview = false) {
 		if (gphoto2 !== null) {
-			this._takePictureWithCamera(callback);
+			if(preview) {
+				this._takePreviewWithCamera(callback);
+			} else {
+				this._takePictureWithCamera(callback);
+			}
 		} else {
 			this._createSamplePicture(callback);
 		}
@@ -106,7 +110,7 @@ class Camera {
 
 		const keep = utils.getConfig().gphoto2.keep === true ?  true : false;
 
-		self.camera.takePicture({ download: true, keep: keep }, function (err, data) {
+		self.camera.takePicture({ download: true, keep }, function (err, data) {
 
 			if (err) {
 				self.camera = undefined;	// needs to be reinitialized
@@ -116,6 +120,19 @@ class Camera {
 
 			self._resizeAndSave(data, callback);
 		});
+	}
+
+	_takePreviewWithCamera(callback) {
+		var self = this;
+
+		if (self.camera === undefined) {
+			callback(-1, 'camera not initialized', null);
+			return;
+		}
+
+		const keep = utils.getConfig().gphoto2.keep === true ?  true : false;
+
+		self.camera.takePicture ({ keep, preview: true, targetPath: "/tmp/liveimg.XXXXXX" }, callback);
 	}
 
 	_createSamplePicture(callback) {
@@ -145,7 +162,7 @@ class Camera {
 
 		function resizeInternal() {
 			const resizedFilePath = utils.getPhotosDirectory() + filename;
-			const webFilepath = 'photos/' + "img_" + utils.getTimestamp() + ".jpg";
+			const webFilepath = 'photos/' + filename;
 			const maxImageSize = utils.getConfig().maxImageSize ? utils.getConfig().maxImageSize : 1500;
 
 			sharp(data) // resize image to given maxSize
