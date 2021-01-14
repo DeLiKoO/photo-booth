@@ -22,7 +22,8 @@ class LivePreview{
 		let el = document.createElement("div");
 		//el.src = "file://"+data;
 		el.className = "live";
-		el.style.backgroundImage = "url(file://"+data+")";
+		let url = "data:image/png;base64," + data.toString('base64');
+		el.style.backgroundImage = "url('" + url.replace(/(\r\n|\n|\r)/gm, "") + "')";
 		this.root.prepend(el);
 		this.count++;
 		if(this.count > 2){
@@ -30,8 +31,8 @@ class LivePreview{
 		}
 	}
 	takePreview(){
-		return new Promise((res,rej)=>this.cam.takePicture (function (error, data) {
-			if(error)
+		return new Promise((res,rej)=>this.cam.takePicture (function (code, data, error) {
+			if(code !== 0)
 				rej(error); 
 			else
 				res(data);

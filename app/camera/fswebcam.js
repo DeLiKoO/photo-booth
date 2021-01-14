@@ -79,14 +79,19 @@ class Camera {
 	takePicture(callback, preview = false) {
 		let filename;
 		if(preview) {
-			filename = "img_" + utils.getTimestamp() + ".jpg";
-		} else {
 			filename = "preview.jpg";
+		} else {
+			filename = "img_" + utils.getTimestamp() + ".jpg";
 		}
 		if (simulate) {
 			this._createSamplePicture(filename, callback);
 		} else {
-			this._takePictureWithCamera(filename, callback);
+			if(preview) {
+				this._takePreviewWithCamera(callback);
+			} else {
+				this._takePictureWithCamera(filename, callback);
+			}
+
 		}
 	}
 
@@ -109,6 +114,29 @@ class Camera {
 			}
 		
 			self._resizeAndSave(data, filename, callback);
+		});
+	}
+
+	_takePreviewWithCamera(callback) {
+		var self = this;
+
+		if (self.camera === undefined) {
+			callback(-1, 'camera not initialized', null);
+			return;
+		}
+
+		const keep = utils.getConfig().fswebcam.keep === true ?  true : false;
+
+		self.camera.capture("photobooth_capture", function (err, data) {
+
+			if (err) {
+				self.camera = undefined;	// needs to be reinitialized
+				callback(-2, 'connection to camera failed', err);
+				return;
+			}
+
+			callback(0, data, err);
+		
 		});
 	}
 

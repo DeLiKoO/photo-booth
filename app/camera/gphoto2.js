@@ -132,7 +132,16 @@ class Camera {
 
 		const keep = utils.getConfig().gphoto2.keep === true ?  true : false;
 
-		self.camera.takePicture ({ keep, preview: true, targetPath: "/tmp/liveimg.XXXXXX" }, callback);
+		self.camera.takePicture (
+			{ keep, preview: true, targetPath: "/tmp/liveimg.XXXXXX" }, 
+			(err,data) => {
+				if(err) {
+					callback(-2, 'connection to camera failed', err);
+				} else {
+					callback(0, data, err);
+				}
+			}
+		);
 	}
 
 	_createSamplePicture(callback) {

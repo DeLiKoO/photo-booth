@@ -19,9 +19,14 @@
 		"activatesAfterSeconds": "30",
 		"secondsPerPhoto": "8"
 	},
-	"cameraInterface": "fswebcam",
+	"cameraInterface": "livecam",
 	"fswebcam": {
 		"simulate": false
+	},
+	"livecam": {
+		"simulate": false,
+		"width": 1920,
+		"height": 1080
 	},
 	"gphoto2": {
 		"capturetarget": 0,
@@ -37,7 +42,7 @@
 		"password": "test",
 		"maxDownloadImageSize": 800,
 		"gifDelay": 1000,
-		"enableRemoteRelease": true,
+		"enableRemoteRelease": true, 
 		"contactAddressType": "email"
 	},
 	"printing": {
