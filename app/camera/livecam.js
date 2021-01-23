@@ -28,7 +28,8 @@ import utils from "../utils.js";
 const io = require('socket.io-client');
 
 const configRoot = utils.getConfig();
-const fps = configRoot.live ? configRoot.live.framerate : undefined;
+// const fps = configRoot.live ? configRoot.live.framerate : undefined;
+const fps = 0; // let it run freely, so polling at inferior rates can work with low cpu usage
 const config = utils.getConfig().livecam;
 const simulate = config ? config.simulate : false;
 
@@ -48,7 +49,7 @@ const DEFAULT_CONFIG = {
 	gst_tcp_port: 10000,
 
 	// callback function called when server starts
-	start: function() {
+	start: function () {
 		console.log('WebCam server started!');
 	},
 
@@ -80,14 +81,17 @@ const DEFAULT_CONFIG = {
 };
 
 const listener = (preview, callback) => (self, data) => {
-	if(preview) {
+	let filename;
+	if (preview) {
 		self.previewListener = undefined;
 		// console.log("handling preview video frame");
 		callback(0, data, undefined);
 	} else {
-		self.captureListener = undefined;
 		// console.log("handling picture frame");
-		self._resizeAndSave(data, filename, callback);
+		filename = "img_" + utils.getTimestamp() + ".jpg";
+		self.captureListener = undefined;
+		const binData = Buffer.from(data, 'base64');
+		self._resizeAndSave(binData, filename, callback);
 	}
 }
 
@@ -96,6 +100,7 @@ class Camera {
 	constructor() {
 		this.previewListener = undefined; // for live video preview
 		this.captureListener = undefined; // for photo capture
+		this.currentFrame = undefined;
 	}
 
 	/*
@@ -108,14 +113,14 @@ class Camera {
 		// };
 		this.opts = DEFAULT_CONFIG;
 
-		if(this.camera) {
+		if (this.camera) {
 			console.log("camera already initialized");
 			if (callback) callback(true);
 			return; // abort
 		}
 
 		try {
-			const webcam_server = new LiveCam(this.opts); 
+			const webcam_server = new LiveCam(this.opts);
 			webcam_server.broadcast();
 			this.camera = webcam_server;
 			this.camera = {};
@@ -132,8 +137,9 @@ class Camera {
 
 		this.socket.on('image', (data) => {
 			// console.log("received new frame @", Date.now());
-			if(this.previewListener) this.previewListener(this, data);
-			if(this.captureListener) this.captureListener(this, data);
+			this.currentFrame = data;
+			if (this.previewListener) this.previewListener(this, data);
+			if (this.captureListener) this.captureListener(this, data);
 		});
 
 		this.socket.on('connect_error', (error) => {
@@ -157,7 +163,7 @@ class Camera {
 		return (this.camera !== undefined);
 	}
 
-	isConnected(callback) {
+	isConnected(callback) {
 		if (callback) callback(this.camera !== undefined);
 	}
 
@@ -169,18 +175,18 @@ class Camera {
 			return;
 		}
 
-		let filename;
-		if(preview) {
-			filename = "img_" + utils.getTimestamp() + ".jpg";
-		} else {
-			filename = "preview.jpg";
-		}
 		if (simulate) {
+			let filename;
+			if (preview) {
+				filename = "preview.jpg";
+			} else {
+				filename = "img_" + utils.getTimestamp() + ".jpg";
+			}
 			self._createSamplePicture(filename, callback);
 		} else {
-			if(preview && this.previewListener === undefined) {
+			if (preview && this.previewListener === undefined) {
 				this.previewListener = listener(true, callback);
-			} else if(!preview && this.captureListener === undefined) {
+			} else if (!preview && this.captureListener === undefined) {
 				this.captureListener = listener(false, callback);
 			} else {
 				console.log("listener already pending, expect frame drop");
@@ -200,46 +206,26 @@ class Camera {
 			</svg>`);
 
 		sharp(watermark)
-		.jpeg()
-		.toBuffer(function (err, data) {
-			if (err) {
-				callback(-2, 'failed to create sample picture', err);
-			} else {
-				self._resizeAndSave(data, filename, callback);
-			}
-		});
+			.jpeg()
+			.toBuffer(function (err, data) {
+				if (err) {
+					callback(-2, 'failed to create sample picture', err);
+				} else {
+					self._resizeAndSave(data, filename, callback);
+				}
+			});
 	}
 
 	_resizeAndSave(data, filename, callback) {
 
-		function resizeInternal() {
-			const resizedFilePath = utils.getPhotosDirectory() + filename;
-			const webFilepath = 'photos/' + filename;
-			// const maxImageSize = utils.getConfig().maxImageSize ? utils.getConfig().maxImageSize : 1500;
-
-			sharp(data) // resize image to given maxSize
-				//.resize(Number(maxImageSize)) // scale width to 1500
-				.toFile(resizedFilePath, function(err) {
-					if (err) {
-						callback(-3, 'resizing image failed', err);
-					} else {
-						callback(0, resizedFilePath, webFilepath);
-					}
-				});
-		}
-
-		if (utils.getConfig().printing.enabled) {
-			const filePath = utils.getFullSizePhotosDirectory() + filename;
-			fs.writeFile(filePath, data, function(err) {
-				if (err) {
-					callback(-3, 'saving hq image failed', err);
-				} else {
-					resizeInternal();
-				}
-			});
-		} else {
-			resizeInternal();
-		}
+		const filePath = utils.getFullSizePhotosDirectory() + filename;
+		fs.writeFile(filePath, data, function (err) {
+			if (err) {
+				callback(-3, 'saving hq image failed', err);
+			} else {
+				callback(0, filePath, filePath);
+			}
+		});
 	}
 }
 
